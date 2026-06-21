@@ -71,54 +71,57 @@ enum MediaType {
 }
 
 model Tree {
-  id          String   @id @default(cuid())
-  name        String
-  description String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  people      Person[]
+  id           String        @id @default(cuid())
+  name         String
+  description  String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  people       Person[]
   partnerships Partnership[]
-  sources     Source[]
+  sources      Source[]
 }
 
 model Person {
-  id          String   @id @default(cuid())
-  treeId      String
-  tree        Tree     @relation(fields: [treeId], references: [id], onDelete: Cascade)
-  givenNames  String
-  surnames    String?
-  preferredName String?
-  maidenName  String?
-  sex         Sex      @default(UNKNOWN)
-  notes       String?
-  isLiving    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  events      PersonEvent[]
-  media       Media[]
-  sourceLinks PersonSource[]
-  parentLinks ParentChild[] @relation("ChildLinks")
-  childLinks  ParentChild[] @relation("ParentLinks")
-  partnershipsA Partnership[] @relation("PartnerA")
-  partnershipsB Partnership[] @relation("PartnerB")
+  id             String        @id @default(cuid())
+  treeId         String
+  tree           Tree          @relation(fields: [treeId], references: [id], onDelete: Cascade)
+  givenNames     String
+  surnames       String?
+  preferredName  String?
+  maidenName     String?
+  sex            Sex           @default(UNKNOWN)
+  notes          String?
+  isLiving       Boolean       @default(true)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  events         PersonEvent[]
+  media          Media[]
+  sourceLinks    PersonSource[]
+  parentLinks    ParentChild[] @relation("ChildLinks")
+  childLinks     ParentChild[] @relation("ParentLinks")
+  partnershipsA  Partnership[] @relation("PartnerA")
+  partnershipsB  Partnership[] @relation("PartnerB")
 
   @@index([treeId, surnames, givenNames])
 }
 
 model ParentChild {
-  id           String           @id @default(cuid())
-  parentId     String
-  childId      String
-  type         RelationshipType @default(BIOLOGICAL)
-  startDate    FlexibleDate?
-  endDate      FlexibleDate?
-  notes        String?
-  parent       Person           @relation("ParentLinks", fields: [parentId], references: [id], onDelete: Cascade)
-  child        Person           @relation("ChildLinks", fields: [childId], references: [id], onDelete: Cascade)
+  id          String           @id @default(cuid())
+  parentId    String
+  childId     String
+  type        RelationshipType @default(BIOLOGICAL)
+  startDateId String?
+  endDateId   String?
+  notes       String?
+  parent      Person           @relation("ParentLinks", fields: [parentId], references: [id], onDelete: Cascade)
+  child       Person           @relation("ChildLinks", fields: [childId], references: [id], onDelete: Cascade)
+  startDate   FlexibleDate?    @relation("ParentStart", fields: [startDateId], references: [id])
+  endDate     FlexibleDate?    @relation("ParentEnd", fields: [endDateId], references: [id])
 
   @@unique([parentId, childId, type])
   @@index([childId])
+  @@index([startDateId])
+  @@index([endDateId])
 }
 
 model Partnership {
@@ -130,8 +133,10 @@ model Partnership {
   partnerA    Person          @relation("PartnerA", fields: [partnerAId], references: [id], onDelete: Cascade)
   partnerB    Person          @relation("PartnerB", fields: [partnerBId], references: [id], onDelete: Cascade)
   type        PartnershipType @default(MARRIAGE)
-  startDate   FlexibleDate?
-  endDate     FlexibleDate?
+  startDateId String?
+  endDateId   String?
+  startDate   FlexibleDate?   @relation("PartnershipStart", fields: [startDateId], references: [id])
+  endDate     FlexibleDate?   @relation("PartnershipEnd", fields: [endDateId], references: [id])
   startPlace  String?
   endPlace    String?
   notes       String?
@@ -140,36 +145,37 @@ model Partnership {
   @@index([treeId])
   @@index([partnerAId])
   @@index([partnerBId])
+  @@index([startDateId])
+  @@index([endDateId])
 }
 
 model FlexibleDate {
-  id          String        @id @default(cuid())
-  display     String
-  precision   DatePrecision @default(UNKNOWN)
-  year        Int?
-  month       Int?
-  day         Int?
-  endYear     Int?
-  endMonth    Int?
-  endDay      Int?
-  sortValue   Int?
-
-  personEvents PersonEvent[]
+  id                String             @id @default(cuid())
+  display           String
+  precision         DatePrecision      @default(UNKNOWN)
+  year              Int?
+  month             Int?
+  day               Int?
+  endYear           Int?
+  endMonth          Int?
+  endDay            Int?
+  sortValue         Int?
+  personEvents      PersonEvent[]
   partnershipEvents PartnershipEvent[]
-  parentStarts ParentChild[] @relation("ParentStart")
-  parentEnds ParentChild[] @relation("ParentEnd")
-  partnershipStarts Partnership[] @relation("PartnershipStart")
-  partnershipEnds Partnership[] @relation("PartnershipEnd")
+  parentStarts      ParentChild[]      @relation("ParentStart")
+  parentEnds        ParentChild[]      @relation("ParentEnd")
+  partnershipStarts Partnership[]      @relation("PartnershipStart")
+  partnershipEnds   Partnership[]      @relation("PartnershipEnd")
 }
 
 model PersonEvent {
-  id          String    @id @default(cuid())
+  id          String         @id @default(cuid())
   personId    String
-  person      Person    @relation(fields: [personId], references: [id], onDelete: Cascade)
+  person      Person         @relation(fields: [personId], references: [id], onDelete: Cascade)
   type        EventType
   title       String?
   dateId      String?
-  date        FlexibleDate? @relation(fields: [dateId], references: [id])
+  date        FlexibleDate?  @relation(fields: [dateId], references: [id])
   place       String?
   latitude    Float?
   longitude   Float?
@@ -181,15 +187,18 @@ model PersonEvent {
 }
 
 model PartnershipEvent {
-  id            String      @id @default(cuid())
+  id            String        @id @default(cuid())
   partnershipId String
-  partnership   Partnership @relation(fields: [partnershipId], references: [id], onDelete: Cascade)
+  partnership   Partnership   @relation(fields: [partnershipId], references: [id], onDelete: Cascade)
   type          EventType
   title         String?
   dateId        String?
   date          FlexibleDate? @relation(fields: [dateId], references: [id])
   place         String?
   description   String?
+
+  @@index([partnershipId, type])
+  @@index([dateId])
 }
 
 model Media {
@@ -208,20 +217,20 @@ model Media {
 }
 
 model Source {
-  id          String   @id @default(cuid())
-  treeId      String
-  tree        Tree     @relation(fields: [treeId], references: [id], onDelete: Cascade)
-  title       String
-  author      String?
-  repository  String?
-  citation    String?
-  url         String?
-  notes       String?
-  filePath    String?
-  mimeType    String?
-  createdAt   DateTime @default(now())
-  people      PersonSource[]
-  events      EventSource[]
+  id         String         @id @default(cuid())
+  treeId     String
+  tree       Tree           @relation(fields: [treeId], references: [id], onDelete: Cascade)
+  title      String
+  author     String?
+  repository String?
+  citation   String?
+  url        String?
+  notes      String?
+  filePath   String?
+  mimeType   String?
+  createdAt  DateTime       @default(now())
+  people     PersonSource[]
+  events     EventSource[]
 
   @@index([treeId, title])
 }
@@ -247,9 +256,9 @@ model EventSource {
 }
 
 model AppSettings {
-  id              Int      @id @default(1)
-  authenticationEnabled Boolean @default(false)
-  passwordHash    String?
-  sessionSecret   String?
-  updatedAt       DateTime @updatedAt
+  id                    Int      @id @default(1)
+  authenticationEnabled Boolean  @default(false)
+  passwordHash          String?
+  sessionSecret         String?
+  updatedAt             DateTime @updatedAt
 }
