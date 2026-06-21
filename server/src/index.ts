@@ -23,6 +23,7 @@ app.get("/api/tree", async () => {
           media: true,
           parentLinks: true,
           childLinks: true,
+          appearances: true,
         },
       },
       partnerships: {
@@ -70,6 +71,31 @@ app.post("/api/people", async (request, reply) => {
       surnames: body.surnames?.trim() || null,
       preferredName: body.preferredName?.trim() || null,
       sex: body.sex ?? "UNKNOWN",
+      appearances: { create: { contextKey: "primary" } },
+    },
+    include: { appearances: true },
+  });
+});
+
+app.post("/api/people/:personId/appearances", async (request, reply) => {
+  const { personId } = request.params as { personId: string };
+  const body = request.body as {
+    contextKey?: string;
+    x?: number;
+    y?: number;
+    generation?: number;
+  };
+
+  const person = await prisma.person.findUnique({ where: { id: personId } });
+  if (!person) return reply.code(404).send({ message: "Persona no encontrada" });
+
+  return prisma.personAppearance.create({
+    data: {
+      personId,
+      contextKey: body.contextKey?.trim() || `appearance-${Date.now()}`,
+      x: body.x,
+      y: body.y,
+      generation: body.generation,
     },
   });
 });
