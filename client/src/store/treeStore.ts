@@ -10,6 +10,14 @@ export type PersonEvent = {
   date?: { display: string; sortValue?: number | null } | null;
 };
 
+export type PersonAppearance = {
+  id: string;
+  contextKey: string;
+  x?: number | null;
+  y?: number | null;
+  generation?: number | null;
+};
+
 export type Person = {
   id: string;
   givenNames: string;
@@ -19,8 +27,9 @@ export type Person = {
   isLiving: boolean;
   events: PersonEvent[];
   media: Array<{ id: string; path: string; isPrimary: boolean }>;
-  parentLinks: Array<{ parentId: string; childId: string; type: string }>;
-  childLinks: Array<{ parentId: string; childId: string; type: string }>;
+  parentLinks: Array<{ id?: string; parentId: string; childId: string; type: string }>;
+  childLinks: Array<{ id?: string; parentId: string; childId: string; type: string }>;
+  appearances: PersonAppearance[];
 };
 
 export type FamilyTree = {
