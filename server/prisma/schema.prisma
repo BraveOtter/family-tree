@@ -82,27 +82,44 @@ model Tree {
 }
 
 model Person {
-  id             String        @id @default(cuid())
+  id             String             @id @default(cuid())
   treeId         String
-  tree           Tree          @relation(fields: [treeId], references: [id], onDelete: Cascade)
+  tree           Tree               @relation(fields: [treeId], references: [id], onDelete: Cascade)
   givenNames     String
   surnames       String?
   preferredName  String?
   maidenName     String?
-  sex            Sex           @default(UNKNOWN)
+  sex            Sex                @default(UNKNOWN)
   notes          String?
-  isLiving       Boolean       @default(true)
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  isLiving       Boolean            @default(true)
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
   events         PersonEvent[]
   media          Media[]
   sourceLinks    PersonSource[]
-  parentLinks    ParentChild[] @relation("ChildLinks")
-  childLinks     ParentChild[] @relation("ParentLinks")
-  partnershipsA  Partnership[] @relation("PartnerA")
-  partnershipsB  Partnership[] @relation("PartnerB")
+  parentLinks    ParentChild[]       @relation("ChildLinks")
+  childLinks     ParentChild[]       @relation("ParentLinks")
+  partnershipsA  Partnership[]      @relation("PartnerA")
+  partnershipsB  Partnership[]      @relation("PartnerB")
+  appearances    PersonAppearance[]
 
   @@index([treeId, surnames, givenNames])
+}
+
+model PersonAppearance {
+  id         String   @id @default(cuid())
+  personId   String
+  person     Person   @relation(fields: [personId], references: [id], onDelete: Cascade)
+  contextKey String
+  x          Float?
+  y          Float?
+  generation Int?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([personId, contextKey])
+  @@index([personId])
+  @@index([generation])
 }
 
 model ParentChild {
